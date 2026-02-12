@@ -15,7 +15,7 @@
             theme: {
                 extend: {
                     colors: {
-                        'bg-main': '#f9f7f2',      /* 燕麥米色背景 */
+                        'bg-main': '#f9f7f2',      /* 燕麥米色 */
                         'primary': '#c0a080',      /* 拿鐵主色 */
                         'accent': '#a67c52',       /* 焦糖強調色 */
                         'text-dark': '#594a42',    /* 深咖文字 */
@@ -44,16 +44,13 @@
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
             overflow-x: hidden;
-            /* 底部留白，確保不被導覽列擋住 */
             padding-bottom: 0px; 
         }
 
-        /* 統一所有分頁的內距設定，解決對齊問題 */
+        /* 統一內距 */
         .tab-content {
-            padding-left: 16px;
-            padding-right: 16px;
-            padding-top: 16px;
-            padding-bottom: 120px; /* 預留底部導覽列空間 */
+            padding: 16px;
+            padding-bottom: 120px; 
             width: 100%;
         }
 
@@ -91,6 +88,22 @@
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 編輯模式輸入框樣式 */
+        .edit-input {
+            width: 100%;
+            border: 1px dashed #ccc;
+            background: #fff;
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: #594a42;
+            font-size: inherit;
+        }
+        .edit-input:focus {
+            border-color: #a67c52;
+            outline: none;
+            background: #fffcf5;
+        }
 
         [v-cloak] { display: none; }
     </style>
@@ -166,13 +179,27 @@
                 </button>
             </div>
 
-            <div v-if="currentTab === 'info'" class="tab-content">
+            <div v-if="currentTab === 'info'" class="tab-content relative">
                 
-                <div class="bg-red-50 rounded-xl shadow-sm p-4 mb-4 border border-red-100">
+                <button @click="toggleEditInfo" class="absolute top-2 right-4 z-10 px-3 py-1.5 rounded-full text-xs font-bold shadow-md transition-all flex items-center gap-1"
+                    :class="isEditingInfo ? 'bg-accent text-white' : 'bg-white text-gray-500 border'">
+                    <i :class="isEditingInfo ? 'fa-solid fa-floppy-disk' : 'fa-solid fa-pen'"></i>
+                    {{ isEditingInfo ? '儲存' : '編輯' }}
+                </button>
+
+                <div class="bg-red-50 rounded-xl shadow-sm p-4 mb-4 border border-red-100 mt-8">
                     <h3 class="font-bold text-red-600 mb-2 flex items-center"><i class="fa-solid fa-triangle-exclamation mr-2"></i>緊急聯絡</h3>
-                    <div class="flex justify-around">
-                        <div class="bg-white p-2 rounded shadow-sm w-1/3 text-center"><div class="text-xl font-bold text-red-600">110</div><div class="text-[10px]">警察</div></div>
-                        <div class="bg-white p-2 rounded shadow-sm w-1/3 text-center"><div class="text-xl font-bold text-red-600">119</div><div class="text-[10px]">救護</div></div>
+                    <div class="flex justify-around gap-2">
+                        <div class="bg-white p-2 rounded shadow-sm w-1/2 text-center">
+                            <input v-if="isEditingInfo" v-model="infoData.police" class="edit-input text-center text-xl font-bold text-red-600">
+                            <div v-else class="text-xl font-bold text-red-600">{{ infoData.police }}</div>
+                            <div class="text-[10px]">警察</div>
+                        </div>
+                        <div class="bg-white p-2 rounded shadow-sm w-1/2 text-center">
+                            <input v-if="isEditingInfo" v-model="infoData.ambulance" class="edit-input text-center text-xl font-bold text-red-600">
+                            <div v-else class="text-xl font-bold text-red-600">{{ infoData.ambulance }}</div>
+                            <div class="text-[10px]">救護</div>
+                        </div>
                     </div>
                 </div>
 
@@ -191,7 +218,10 @@
                     <div class="flex items-center gap-2">
                         <input type="number" v-model="calcJpy" class="w-full p-2 bg-bg-main border border-gray-200 rounded text-sm" placeholder="日幣">
                         <i class="fa-solid fa-arrow-right text-gray-300"></i>
-                        <div class="w-full p-2 bg-gray-100 rounded text-center font-bold">NT$ {{ (calcJpy * 0.22).toFixed(0) }}</div>
+                        <div class="w-full p-2 bg-gray-100 rounded text-center font-bold">NT$ {{ (calcJpy * infoData.rate).toFixed(0) }}</div>
+                    </div>
+                    <div v-if="isEditingInfo" class="mt-2 text-xs flex items-center gap-2">
+                        匯率設定: <input v-model="infoData.rate" type="number" step="0.01" class="edit-input w-16">
                     </div>
                 </div>
 
@@ -199,23 +229,53 @@
                     <h3 class="font-bold text-green-700 mb-3"><i class="fa-solid fa-bed mr-2"></i>住宿憑證</h3>
                     
                     <div class="mb-4 pb-4 border-b border-gray-100">
-                        <h4 class="font-bold text-sm text-text-dark">名古屋 JR 門樓飯店</h4>
-                        <p class="text-xs text-gray-400 mb-2">2/14 - 2/18</p>
-                        <div class="bg-green-50 p-3 rounded-lg text-sm space-y-2">
-                            <div class="flex justify-between"><span>確認編號</span><span class="font-mono font-bold text-green-800">1616326757791746</span></div>
-                            <div class="flex justify-between"><span>PIN</span><span class="font-mono font-bold text-red-500 bg-white px-2 rounded border border-red-100">7070</span></div>
+                        <div v-if="isEditingInfo">
+                            <input v-model="infoData.h1_name" class="edit-input font-bold mb-1" placeholder="飯店名稱">
+                            <input v-model="infoData.h1_date" class="edit-input text-xs mb-1" placeholder="日期">
                         </div>
-                        <button @click="openMap('Nagoya JR Gate Tower Hotel')" class="w-full mt-2 py-1.5 bg-gray-100 text-xs text-gray-600 rounded">導航</button>
+                        <div v-else>
+                            <h4 class="font-bold text-sm text-text-dark">{{ infoData.h1_name }}</h4>
+                            <p class="text-xs text-gray-400 mb-2">{{ infoData.h1_date }}</p>
+                        </div>
+                        
+                        <div class="bg-green-50 p-3 rounded-lg text-sm space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span>確認編號</span>
+                                <input v-if="isEditingInfo" v-model="infoData.h1_conf" class="edit-input w-32 text-right">
+                                <span v-else class="font-mono font-bold text-green-800">{{ infoData.h1_conf }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>PIN</span>
+                                <input v-if="isEditingInfo" v-model="infoData.h1_pin" class="edit-input w-20 text-right">
+                                <span v-else class="font-mono font-bold text-red-500 bg-white px-2 rounded border border-red-100">{{ infoData.h1_pin }}</span>
+                            </div>
+                        </div>
+                        <button @click="openMap(infoData.h1_name)" class="w-full mt-2 py-1.5 bg-gray-100 text-xs text-gray-600 rounded">導航</button>
                     </div>
 
                     <div>
-                        <h4 class="font-bold text-sm text-text-dark">三井花園飯店大手町</h4>
-                        <p class="text-xs text-gray-400 mb-2">2/18 - 2/21</p>
-                        <div class="bg-green-50 p-3 rounded-lg text-sm space-y-2">
-                            <div class="flex justify-between"><span>確認編號</span><span class="font-mono font-bold text-green-800">1616327582739562</span></div>
-                            <div class="flex justify-between"><span>PIN</span><span class="font-mono font-bold text-red-500 bg-white px-2 rounded border border-red-100">8835</span></div>
+                        <div v-if="isEditingInfo">
+                            <input v-model="infoData.h2_name" class="edit-input font-bold mb-1" placeholder="飯店名稱">
+                            <input v-model="infoData.h2_date" class="edit-input text-xs mb-1" placeholder="日期">
                         </div>
-                        <button @click="openMap('Mitsui Garden Hotel Otemachi')" class="w-full mt-2 py-1.5 bg-gray-100 text-xs text-gray-600 rounded">導航</button>
+                        <div v-else>
+                            <h4 class="font-bold text-sm text-text-dark">{{ infoData.h2_name }}</h4>
+                            <p class="text-xs text-gray-400 mb-2">{{ infoData.h2_date }}</p>
+                        </div>
+
+                        <div class="bg-green-50 p-3 rounded-lg text-sm space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span>確認編號</span>
+                                <input v-if="isEditingInfo" v-model="infoData.h2_conf" class="edit-input w-32 text-right">
+                                <span v-else class="font-mono font-bold text-green-800">{{ infoData.h2_conf }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>PIN</span>
+                                <input v-if="isEditingInfo" v-model="infoData.h2_pin" class="edit-input w-20 text-right">
+                                <span v-else class="font-mono font-bold text-red-500 bg-white px-2 rounded border border-red-100">{{ infoData.h2_pin }}</span>
+                            </div>
+                        </div>
+                        <button @click="openMap(infoData.h2_name)" class="w-full mt-2 py-1.5 bg-gray-100 text-xs text-gray-600 rounded">導航</button>
                     </div>
                 </div>
 
@@ -224,39 +284,52 @@
                     <div class="space-y-4">
                         <div class="bg-blue-50 p-3 rounded-lg">
                             <div class="flex justify-between items-center text-sm mb-1">
-                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">去程 2/14</span>
-                                <span class="font-bold text-text-dark">CI150</span>
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">去程 {{ infoData.f1_date }}</span>
+                                <input v-if="isEditingInfo" v-model="infoData.f1_no" class="edit-input w-20">
+                                <span v-else class="font-bold text-text-dark">{{ infoData.f1_no }}</span>
                             </div>
-                            <div class="flex justify-between text-xs text-gray-600 mb-2">
-                                <span>台北 17:15</span>
+                            <div class="flex justify-between text-xs text-gray-600 mb-2 items-center">
+                                <input v-if="isEditingInfo" v-model="infoData.f1_dep" class="edit-input w-1/3">
+                                <span v-else>{{ infoData.f1_dep }}</span>
                                 <i class="fa-solid fa-arrow-right"></i>
-                                <span>名古屋 20:50</span>
+                                <input v-if="isEditingInfo" v-model="infoData.f1_arr" class="edit-input w-1/3">
+                                <span v-else>{{ infoData.f1_arr }}</span>
                             </div>
                             <div class="bg-white p-2 rounded text-xs text-gray-600 text-center border border-blue-100">
-                                <b>座位:</b> 35A, 36A, 36B, 35B
+                                <b>座位:</b> 
+                                <input v-if="isEditingInfo" v-model="infoData.f1_seat" class="edit-input w-2/3">
+                                <span v-else>{{ infoData.f1_seat }}</span>
                             </div>
                         </div>
 
                         <div class="bg-blue-50 p-3 rounded-lg">
                             <div class="flex justify-between items-center text-sm mb-1">
-                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">回程 2/21</span>
-                                <span class="font-bold text-text-dark">CI221</span>
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">回程 {{ infoData.f2_date }}</span>
+                                <input v-if="isEditingInfo" v-model="infoData.f2_no" class="edit-input w-20">
+                                <span v-else class="font-bold text-text-dark">{{ infoData.f2_no }}</span>
                             </div>
-                            <div class="flex justify-between text-xs text-gray-600 mb-2">
-                                <span>東京 14:15</span>
+                            <div class="flex justify-between text-xs text-gray-600 mb-2 items-center">
+                                <input v-if="isEditingInfo" v-model="infoData.f2_dep" class="edit-input w-1/3">
+                                <span v-else>{{ infoData.f2_dep }}</span>
                                 <i class="fa-solid fa-arrow-right"></i>
-                                <span>台北 17:15</span>
+                                <input v-if="isEditingInfo" v-model="infoData.f2_arr" class="edit-input w-1/3">
+                                <span v-else>{{ infoData.f2_arr }}</span>
                             </div>
                         </div>
 
                         <div class="bg-purple-50 p-3 rounded-lg border border-purple-100">
                             <div class="flex justify-between items-center text-sm mb-1">
-                                <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded font-bold">μ-SKY</span>
-                                <span class="font-bold text-text-dark">22:07 發 (1號車)</span>
+                                <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded font-bold">{{ infoData.train_name }}</span>
+                                <input v-if="isEditingInfo" v-model="infoData.train_time" class="edit-input w-1/2">
+                                <span v-else class="font-bold text-text-dark">{{ infoData.train_time }}</span>
                             </div>
-                            <div class="text-xs text-gray-600 mb-1">座位: 8A, 8B, 9A, 9B</div>
+                            <div class="text-xs text-gray-600 mb-1">
+                                <input v-if="isEditingInfo" v-model="infoData.train_seat" class="edit-input w-full">
+                                <span v-else>{{ infoData.train_seat }}</span>
+                            </div>
                             <div class="text-xs text-right text-red-500 font-bold bg-white p-1 rounded border border-purple-100">
-                                購票號: 966-401-04
+                                <input v-if="isEditingInfo" v-model="infoData.train_code" class="edit-input w-full text-right">
+                                <span v-else>{{ infoData.train_code }}</span>
                             </div>
                         </div>
                     </div>
@@ -281,7 +354,7 @@
                 <div class="bg-accent text-white rounded-xl p-5 mb-4 text-center w-full shadow-lg">
                     <div class="text-sm opacity-90">總花費</div>
                     <div class="text-3xl font-bold">¥{{ totalExpense.toLocaleString() }}</div>
-                    <div class="text-xs opacity-80 mt-2 pt-2 border-t border-white/20">約 NT$ {{ (totalExpense * 0.22).toFixed(0).toLocaleString() }}</div>
+                    <div class="text-xs opacity-80 mt-2 pt-2 border-t border-white/20">約 NT$ {{ (totalExpense * infoData.rate).toFixed(0).toLocaleString() }}</div>
                 </div>
 
                 <div class="space-y-2 w-full">
@@ -360,6 +433,7 @@
         setup() {
             const currentTab = ref('itinerary');
             const selectedDayIndex = ref(0);
+            const isEditingInfo = ref(false); // 控制資訊頁面的編輯狀態
             
             const tripDays = [
                 { date: '2/14', week: 'SAT', fullDate: '2026-02-14', weather: 'cloud', temp: 8, location: '名古屋', weatherDesc: '多雲', hotel: '名古屋JR門樓飯店' },
@@ -377,10 +451,21 @@
             const expenses = ref([]);
             const calcJpy = ref('');
             
-            const storageKey = 'cherry_v7_final'; // 更新Key以強制覆蓋舊資料
+            // 資訊頁面的資料 (可編輯)
+            const infoData = ref({
+                police: '110', ambulance: '119', rate: 0.22,
+                h1_name: '名古屋 JR 門樓飯店', h1_date: '2/14 - 2/18', h1_conf: '1616326757791746', h1_pin: '7070',
+                h2_name: '三井花園飯店大手町', h2_date: '2/18 - 2/21', h2_conf: '1616327582739562', h2_pin: '8835',
+                f1_date: '2/14', f1_no: 'CI150', f1_dep: '台北 17:15', f1_arr: '名古屋 20:50', f1_seat: '35A, 36A, 36B, 35B',
+                f2_date: '2/21', f2_no: 'CI221', f2_dep: '東京 14:15', f2_arr: '台北 17:15',
+                train_name: 'μ-SKY', train_time: '22:07 發 (1號車)', train_seat: '座位: 8A, 8B, 9A, 9B', train_code: '購票號: 966-401-04'
+            });
+            
+            const storageKey = 'cherry_v8_final'; 
 
             const initData = () => {
                 if(!localStorage.getItem(storageKey)) {
+                    // 初始化行程 (同上)
                     itineraryData.value = {
                         '2026-02-14': [
                             { id: 1, type: 'flight', name: 'CI150 抵達名古屋', time: '20:50', note: '入境預留2.5hr', transportType: 'walk', transportTime: '入境' },
@@ -424,6 +509,11 @@
                     itineraryData.value = JSON.parse(localStorage.getItem(storageKey));
                     shoppingList.value = JSON.parse(localStorage.getItem(storageKey + '_s') || '[]');
                     expenses.value = JSON.parse(localStorage.getItem(storageKey + '_e') || '[]');
+                    
+                    // 讀取 Info 資料
+                    if(localStorage.getItem(storageKey + '_info')) {
+                        infoData.value = JSON.parse(localStorage.getItem(storageKey + '_info'));
+                    }
                 }
             };
 
@@ -443,6 +533,15 @@
                 localStorage.setItem(storageKey, JSON.stringify(itineraryData.value));
                 localStorage.setItem(storageKey + '_s', JSON.stringify(shoppingList.value));
                 localStorage.setItem(storageKey + '_e', JSON.stringify(expenses.value));
+                localStorage.setItem(storageKey + '_info', JSON.stringify(infoData.value)); // 儲存 Info 資料
+            };
+
+            // Info 編輯功能
+            const toggleEditInfo = () => {
+                if(isEditingInfo.value) {
+                    saveToLocal(); // 儲存
+                }
+                isEditingInfo.value = !isEditingInfo.value;
             };
 
             const openAddModal = () => { isEditing.value = false; formItem.value = { type: 'spot', name: '', time: '', note: '', transportType: 'walk' }; showAddModal.value = true; };
@@ -483,6 +582,7 @@
                 showAddModal, isEditing, formItem, saveItem, deleteItem, openAddModal, editItem,
                 showShoppingModal, shoppingList, shoppingForm, saveShoppingItem, removeShoppingItem,
                 totalExpense, showExpenseModal, expenses, expenseForm, saveExpense, removeExpense, calcJpy,
+                infoData, isEditingInfo, toggleEditInfo, // 新增的 info 相關變數
                 getWeatherIcon, getTypeColor, getTypeName, getTransportIcon, getCategoryColor, openMap
             };
         }
