@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>櫻桃家日本之旅</title>
+    <title>FISHKN家日本之旅</title>
     
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -29,7 +29,7 @@
     <style>
         /* === 手機版面模擬 === */
         body {
-            background-color: #e0e0e0; /* 電腦版背景 */
+            background-color: #e0e0e0; 
             margin: 0;
             font-family: 'Noto Sans TC', sans-serif;
             display: flex;
@@ -39,8 +39,8 @@
 
         #mobile-container {
             width: 100%;
-            max-width: 430px; /* 手機寬度限制 */
-            background-color: #f9f7f2; /* App 背景色 */
+            max-width: 430px; /* 限制最大寬度像手機 */
+            background-color: #f9f7f2; 
             min-height: 100vh;
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
@@ -51,12 +51,12 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 標題欄位：極簡風格 + 毛玻璃置頂 */
+        /* 標題欄位 */
         .header-simple {
             position: sticky;
             top: 0;
             z-index: 50;
-            background-color: rgba(249, 247, 242, 0.95); /* 半透明燕麥色 */
+            background-color: rgba(249, 247, 242, 0.95);
             backdrop-filter: blur(10px);
             padding-top: max(20px, env(safe-area-inset-top));
             padding-bottom: 15px;
@@ -94,9 +94,12 @@
 <div id="app" v-cloak>
     <div id="mobile-container">
         
-        <div class="header-simple px-6">
-            <h1 class="text-2xl font-bold text-accent tracking-wide">櫻桃家日本之旅 🌸</h1>
-            <p class="text-xs text-text-light mt-1 font-medium">2026.02.14 - 02.21 | 名古屋 & 東京</p>
+        <div class="header-simple px-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-accent tracking-wide">櫻桃家日本之旅 🌸</h1>
+                <p class="text-xs text-text-light mt-1 font-medium">2026.02.14 - 02.21</p>
+            </div>
+            <button @click="resetData" class="text-xs text-gray-300 hover:text-red-400">重置</button>
         </div>
 
         <div class="px-4 pt-4 relative z-10">
@@ -128,8 +131,11 @@
                 </div>
 
                 <div class="flex flex-col gap-3 pb-20">
+                    <div class="text-xs text-center text-gray-400 mb-1">💡 點擊卡片可編輯或刪除</div>
+                    
                     <div v-for="(item, index) in currentDayItems" :key="item.id"
-                         class="bg-white rounded-xl shadow-sm p-4 border border-gray-50 relative group active:scale-[0.99] transition-transform">
+                         @click="editItem(item)"
+                         class="bg-white rounded-xl shadow-sm p-4 border border-gray-50 relative group active:scale-[0.99] transition-transform cursor-pointer">
                         
                         <div v-if="index > 0" class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gray-50 px-3 py-0.5 rounded-full text-[10px] text-gray-500 border border-gray-200 z-10 whitespace-nowrap shadow-sm">
                             <i :class="getTransportIcon(item.transportType)"></i> {{ item.transportTime || '移動' }}
@@ -142,7 +148,7 @@
                             <span class="px-2 py-0.5 rounded text-[10px] text-white font-medium" :class="getTypeColor(item.type)">
                                 {{ getTypeName(item.type) }}
                             </span>
-                            <button @click="openMap(item.name)" class="text-accent text-xs flex items-center bg-bg-main px-2 py-1 rounded hover:bg-gray-100">
+                            <button @click.stop="openMap(item.name)" class="text-accent text-xs flex items-center bg-bg-main px-2 py-1 rounded hover:bg-gray-100 border border-gray-100">
                                 <i class="fa-solid fa-location-dot mr-1"></i>導航
                             </button>
                         </div>
@@ -165,12 +171,42 @@
                     </div>
                 </div>
 
-                <button @click="showAddModal = true" class="fixed bottom-24 right-[calc(50%-200px+1rem)] w-14 h-14 bg-accent text-white rounded-full shadow-lg flex items-center justify-center text-xl z-40 active:scale-90 transition-transform hover:bg-primary">
+                <button @click="openAddModal" class="fixed bottom-24 right-[calc(50%-200px+1rem)] w-14 h-14 bg-accent text-white rounded-full shadow-lg flex items-center justify-center text-xl z-40 active:scale-90 transition-transform hover:bg-primary">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             </div>
 
             <div v-if="currentTab === 'info'" class="pb-24">
+                
+                <div class="bg-red-50 rounded-xl shadow-sm p-4 mb-4 border border-red-100">
+                    <h3 class="font-bold text-red-600 mb-3 flex items-center"><i class="fa-solid fa-triangle-exclamation mr-2"></i>緊急聯絡電話</h3>
+                    <div class="flex justify-around text-center">
+                        <div class="bg-white p-2 rounded-lg shadow-sm w-1/3">
+                            <div class="text-xl font-bold text-red-600">110</div>
+                            <div class="text-xs text-gray-500">警察局</div>
+                        </div>
+                        <div class="bg-white p-2 rounded-lg shadow-sm w-1/3">
+                            <div class="text-xl font-bold text-red-600">119</div>
+                            <div class="text-xs text-gray-500">救護/火警</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-center text-gray-600 bg-white p-2 rounded">
+                        旅外國人急難救助 (日本): 080-1009-7179
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-5 mb-4 border-l-4 border-primary">
+                    <h3 class="font-bold text-text-dark mb-3"><i class="fa-solid fa-map mr-2"></i>重點區域導航</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button @click="openMap('Nagoya Station')" class="p-2 bg-gray-50 rounded text-xs text-gray-700 hover:bg-gray-100 text-left"><i class="fa-solid fa-train mr-1 text-accent"></i>名古屋車站</button>
+                        <button @click="openMap('Ghibli Park')" class="p-2 bg-gray-50 rounded text-xs text-gray-700 hover:bg-gray-100 text-left"><i class="fa-solid fa-tree mr-1 text-green-600"></i>吉卜力公園全區</button>
+                        <button @click="openMap('Sakae Nagoya Shopping')" class="p-2 bg-gray-50 rounded text-xs text-gray-700 hover:bg-gray-100 text-left"><i class="fa-solid fa-bag-shopping mr-1 text-pink-500"></i>榮町商圈 (Loft)</button>
+                        <button @click="openMap('Shirakawa-go')" class="p-2 bg-gray-50 rounded text-xs text-gray-700 hover:bg-gray-100 text-left"><i class="fa-solid fa-snowflake mr-1 text-blue-400"></i>合掌村聚落</button>
+                        <button @click="openMap('Shinjuku Station')" class="p-2 bg-gray-50 rounded text-xs text-gray-700 hover:bg-gray-100 text-left"><i class="fa-solid fa-city mr-1 text-purple-500"></i>新宿站周邊</button>
+                        <button @click="openMap('Shibuya Scramble Crossing')" class="p-2 bg-gray-50 rounded text-xs text-gray-700 hover:bg-gray-100 text-left"><i class="fa-solid fa-person-walking mr-1 text-orange-500"></i>澀谷十字路口</button>
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-xl shadow-sm p-5 mb-4 border-l-4 border-accent">
                     <h3 class="font-bold text-text-dark mb-3"><i class="fa-solid fa-calculator mr-2"></i>匯率換算</h3>
                     <div class="flex items-center gap-2">
@@ -308,7 +344,7 @@
 
     <div v-if="showAddModal" class="fixed inset-0 bg-black/60 z-[999] flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-2xl w-full max-w-[320px] p-5 shadow-2xl">
-            <h3 class="font-bold text-lg mb-4 text-center text-text-dark">新增行程</h3>
+            <h3 class="font-bold text-lg mb-4 text-center text-text-dark">{{ isEditing ? '編輯行程' : '新增行程' }}</h3>
             <div class="space-y-3">
                 <select v-model="formItem.type" class="w-full p-3 border border-gray-200 rounded-lg bg-bg-main text-sm outline-none focus:border-accent">
                     <option value="spot">📍 景點</option><option value="food">🍴 美食</option><option value="shopping">🛍️ 購物</option><option value="hotel">🏨 住宿</option><option value="flight">✈️ 航班</option><option value="other">🔹 其他</option>
@@ -325,9 +361,11 @@
                 <textarea v-model="formItem.note" placeholder="備註" class="w-full p-3 border border-gray-200 rounded-lg h-20 text-sm outline-none focus:border-accent"></textarea>
             </div>
             <div class="flex gap-3 mt-5">
-                <button @click="showAddModal = false" class="flex-1 py-2.5 bg-gray-100 rounded-xl text-gray-500 font-bold text-sm">取消</button>
+                <button v-if="isEditing" @click="deleteItem" class="flex-1 py-2.5 bg-red-100 text-red-500 rounded-xl font-bold text-sm">刪除</button>
+                <button v-else @click="closeModal" class="flex-1 py-2.5 bg-gray-100 rounded-xl text-gray-500 font-bold text-sm">取消</button>
                 <button @click="saveItem" class="flex-1 py-2.5 bg-accent text-white rounded-xl font-bold text-sm shadow-md">儲存</button>
             </div>
+             <button v-if="isEditing" @click="closeModal" class="w-full mt-2 py-2 text-gray-400 text-xs">取消編輯</button>
         </div>
     </div>
     
@@ -390,9 +428,11 @@
             const expenses = ref([]);
             const calcJpy = ref('');
             
+            // 使用新Key "cherry_trip_final_v1" 以支援編輯功能
+            const storageKey = 'cherry_trip_final_v1';
+
             const initData = () => {
-                // 使用新 Key 'itinerary_final_no_img' 強制刷新
-                if(!localStorage.getItem('itinerary_final_no_img')) {
+                if(!localStorage.getItem(storageKey)) {
                     itineraryData.value = {
                         '2026-02-14': [
                             { id: 1, type: 'flight', name: 'CI150 抵達名古屋', time: '20:50', note: '入境預留2.5hr', transportType: 'walk', transportTime: '入境' },
@@ -433,16 +473,19 @@
                     };
                     saveToLocal();
                 } else {
-                    itineraryData.value = JSON.parse(localStorage.getItem('itinerary_final_no_img'));
-                    shoppingList.value = JSON.parse(localStorage.getItem('shoppingList_no_img') || '[]');
-                    expenses.value = JSON.parse(localStorage.getItem('expenses_no_img') || '[]');
+                    itineraryData.value = JSON.parse(localStorage.getItem(storageKey));
+                    shoppingList.value = JSON.parse(localStorage.getItem(storageKey + '_shop') || '[]');
+                    expenses.value = JSON.parse(localStorage.getItem(storageKey + '_exp') || '[]');
                 }
             };
 
             const showAddModal = ref(false);
+            const isEditing = ref(false);
             const formItem = ref({ type: 'spot', name: '', time: '', note: '', transportType: 'walk', transportTime: '' });
+            
             const showShoppingModal = ref(false);
             const shoppingForm = ref({ name: '', image: null });
+            
             const showExpenseModal = ref(false);
             const expenseForm = ref({ category: 'food', name: '', amount: '', date: '', method: '現金' });
             
@@ -451,25 +494,72 @@
             const totalExpense = computed(() => expenses.value.reduce((sum, item) => sum + Number(item.amount), 0));
 
             const saveToLocal = () => {
-                localStorage.setItem('itinerary_final_no_img', JSON.stringify(itineraryData.value));
-                localStorage.setItem('shoppingList_no_img', JSON.stringify(shoppingList.value));
-                localStorage.setItem('expenses_no_img', JSON.stringify(expenses.value));
+                localStorage.setItem(storageKey, JSON.stringify(itineraryData.value));
+                localStorage.setItem(storageKey + '_shop', JSON.stringify(shoppingList.value));
+                localStorage.setItem(storageKey + '_exp', JSON.stringify(expenses.value));
             };
 
+            // 開啟新增模式
+            const openAddModal = () => {
+                isEditing.value = false;
+                formItem.value = { type: 'spot', name: '', time: '', note: '', transportType: 'walk', transportTime: '' };
+                showAddModal.value = true;
+            };
+
+            // 開啟編輯模式
+            const editItem = (item) => {
+                isEditing.value = true;
+                // 深拷貝以避免直接修改顯示
+                formItem.value = JSON.parse(JSON.stringify(item));
+                showAddModal.value = true;
+            };
+
+            // 儲存邏輯 (區分新增與編輯)
             const saveItem = () => {
                 const dateKey = currentDayData.value.fullDate;
                 if (!itineraryData.value[dateKey]) itineraryData.value[dateKey] = [];
-                itineraryData.value[dateKey].push({ ...formItem.value, id: Date.now() });
+
+                if (isEditing.value) {
+                    // 編輯模式：找到 ID 並替換
+                    const index = itineraryData.value[dateKey].findIndex(i => i.id === formItem.value.id);
+                    if (index !== -1) {
+                        itineraryData.value[dateKey][index] = { ...formItem.value };
+                    }
+                } else {
+                    // 新增模式
+                    itineraryData.value[dateKey].push({ ...formItem.value, id: Date.now() });
+                }
+                
                 saveToLocal();
                 showAddModal.value = false;
-                formItem.value = { type: 'spot', name: '', time: '', note: '', transportType: 'walk', transportTime: '' };
             };
+
+            // 刪除邏輯
+            const deleteItem = () => {
+                if (confirm('確定要刪除這個行程嗎？')) {
+                    const dateKey = currentDayData.value.fullDate;
+                    itineraryData.value[dateKey] = itineraryData.value[dateKey].filter(i => i.id !== formItem.value.id);
+                    saveToLocal();
+                    showAddModal.value = false;
+                }
+            };
+            
+            // 重置資料 (隱藏功能)
+            const resetData = () => {
+                if(confirm('重置將恢復預設行程並清除所有修改，確定嗎？')) {
+                    localStorage.removeItem(storageKey);
+                    location.reload();
+                }
+            };
+
+            // 其他功能函式
+            const closeModal = () => { showAddModal.value = false; };
             const saveShoppingItem = () => { shoppingList.value.push({ ...shoppingForm.value }); saveToLocal(); showShoppingModal.value = false; shoppingForm.value = { name: '', image: null }; };
             const handleImageUpload = (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (e) => shoppingForm.value.image = e.target.result; reader.readAsDataURL(file); } };
             const removeShoppingItem = (index) => { if(confirm('刪除?')) { shoppingList.value.splice(index, 1); saveToLocal(); } };
             const saveExpense = () => { expenses.value.push({ ...expenseForm.value }); saveToLocal(); showExpenseModal.value = false; expenseForm.value = { category: 'food', name: '', amount: '', method: '現金' }; };
             const removeExpense = (index) => { expenses.value.splice(index, 1); saveToLocal(); };
-
+            
             const openMap = (keyword) => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}`, '_blank');
             const getWeatherIcon = (type) => ({ 'sun': '☀️', 'cloud': '☁️', 'rain': '🌧️', 'snow': '❄️' }[type] || '🌤️');
             const getTypeColor = (type) => ({ 'spot': 'bg-pink-400', 'food': 'bg-orange-400', 'shopping': 'bg-purple-400', 'hotel': 'bg-green-500', 'flight': 'bg-blue-500', 'other': 'bg-gray-400' }[type]);
@@ -481,7 +571,8 @@
 
             return {
                 currentTab, tripDays, selectedDayIndex, currentDayItems, currentDayData,
-                showAddModal, formItem, saveItem, showShoppingModal, shoppingList, shoppingForm, saveShoppingItem, handleImageUpload, removeShoppingItem,
+                showAddModal, isEditing, formItem, saveItem, openAddModal, editItem, deleteItem, closeModal, resetData,
+                showShoppingModal, shoppingList, shoppingForm, saveShoppingItem, handleImageUpload, removeShoppingItem,
                 showExpenseModal, expenses, expenseForm, saveExpense, removeExpense, totalExpense, calcJpy,
                 getWeatherIcon, getTypeColor, getTypeName, getTransportIcon, getCategoryColor, openMap
             };
