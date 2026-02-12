@@ -1,4 +1,3 @@
-# japan-trip2026214
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
